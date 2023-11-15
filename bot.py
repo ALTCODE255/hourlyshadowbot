@@ -15,11 +15,7 @@ client = tweepy.Client(
 
 
 def passQuote(quote: str, log: list[str]) -> bool:
-    return (
-        True
-        if quote.strip() and not quote.startswith("#") and quote not in log
-        else False
-    )
+    return quote.strip() and not quote.startswith("#") and quote not in log
 
 
 def getQuote() -> str:
