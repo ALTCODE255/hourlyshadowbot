@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+import pickle
 
 from dotenv import load_dotenv
 import tweepy
@@ -16,27 +17,28 @@ client = tweepy.Client(
 )
 
 
-def passQuote(quote: str, log: list[str]) -> bool:
-    return quote.strip() and not quote.startswith("#") and quote not in log
+def passTweet(tweet: str, log: list[str]) -> bool:
+    return tweet.strip() and not tweet.startswith("#") and tweet not in log
 
 
-def getQuote() -> str:
+def getTweet() -> str:
     limit = int(os.getenv("STORAGE_THRESHOLD"))
-    with open("recent.txt", "r", encoding="utf-8") as f:
-        log = f.read().splitlines()
-        if len(log) < limit:
-            log = [""] * (limit - len(log)) + log
+    try:
+        with open("recent.pkl", "rb") as f:
+            log = pickle.load(f)
+    except FileNotFoundError:
+        log = [""]*limit
     with open("quotes.txt", "r", encoding="utf-8") as f:
-        quotes = [quote for quote in f.read().splitlines()
-                  if passQuote(quote, log)]
-    random_quote = random.choice(quotes)
+        tweets = [tweet for tweet in f.read().splitlines()
+                  if passTweet(tweet, log)]
+    random_tweet = random.choice(tweets)
     log.pop(0)
-    log.append(random_quote)
-    with open("recent.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(log))
-    return random_quote.replace("\\n", "\n")
+    log.append(random_tweet)
+    with open("recent.pkl", "wb") as f:
+        pickle.dump(log, f)
+    return random_tweet.replace("\\n", "\n")
 
 
 if __name__ == "__main__":
-    tweet = client.create_tweet(text=getQuote())
+    tweet = client.create_tweet(text=getTweet())
     print(tweet.data["id"])
